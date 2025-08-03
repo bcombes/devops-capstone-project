@@ -124,3 +124,123 @@ class TestAccountService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     # ADD YOUR TEST CASES HERE ...
+    def test_read_an_account(self):
+        """It should Read an Account by id"""
+        # Create an account first
+        account = AccountFactory()
+        create_response = self.client.post(
+            BASE_URL,
+            json=account.serialize(),
+            content_type="application/json"
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        new_account = create_response.get_json()
+        account_id = new_account["id"]
+
+        # Read the created account
+        read_response = self.client.get(f"{BASE_URL}/{account_id}")
+        self.assertEqual(read_response.status_code, status.HTTP_200_OK)
+        data = read_response.get_json()
+
+        # Verify the returned account data
+        self.assertEqual(data["id"], account_id)
+        self.assertEqual(data["name"], account.name)
+        self.assertEqual(data["email"], account.email)
+        self.assertEqual(data["address"], account.address)
+        self.assertEqual(data["phone_number"], account.phone_number)
+        self.assertEqual(data["date_joined"], str(account.date_joined))
+
+
+    def test_update_an_account(self):
+        """It should Update an Account"""
+        # Create an account first
+        account = AccountFactory()
+        create_response = self.client.post(
+            BASE_URL,
+            json=account.serialize(),
+            content_type="application/json"
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        new_account = create_response.get_json()
+        account_id = new_account["id"]
+
+        # Modify account data
+        updated_account_data = account.serialize()
+        updated_account_data["name"] = "Updated Name"
+        updated_account_data["email"] = "updated@example.com"
+
+        # Update the created account
+        update_response = self.client.put(
+            f"{BASE_URL}/{account_id}",
+            json=updated_account_data,
+            content_type="application/json"
+        )
+        self.assertEqual(update_response.status_code, status.HTTP_200_OK)
+        updated_account = update_response.get_json()
+
+        # Verify the fields have been updated
+        self.assertEqual(updated_account["id"], account_id)
+        self.assertEqual(updated_account["name"], "Updated Name")
+        self.assertEqual(updated_account["email"], "updated@example.com")
+        self.assertEqual(updated_account["address"], account.address)
+        self.assertEqual(updated_account["phone_number"], account.phone_number)
+        self.assertEqual(updated_account["date_joined"], str(account.date_joined))
+
+    def test_delete_an_account(self):
+        """It should Delete an Account"""
+        # Create an account first
+        account = AccountFactory()
+        create_response = self.client.post(
+            BASE_URL,
+            json=account.serialize(),
+            content_type="application/json"
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        new_account = create_response.get_json()
+        account_id = new_account["id"]
+
+        # Delete the account
+        delete_response = self.client.delete(f"{BASE_URL}/{account_id}")
+        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Verify that the deleted account cannot be found
+        read_response = self.client.get(f"{BASE_URL}/{account_id}")
+        self.assertEqual(read_response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_all_accounts(self):
+        """It should list all Accounts"""
+        # Create several accounts
+        expected_count = 5
+        self._create_accounts(expected_count)
+
+        # List all accounts
+        response = self.client.get(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+
+        # Verify that the number of accounts returned matches the created accounts
+        self.assertEqual(len(data), expected_count)
+
+    def test_method_not_supported(self):
+        """It should return 405_METHOD_NOT_ALLOWED for unsupported HTTP methods"""
+        # Use an unsupported HTTP method (PATCH) on the /accounts endpoint
+        response = self.client.patch(BASE_URL)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        data = response.get_json()
+        self.assertEqual(data["error"], "Method not Allowed")
+        self.assertEqual(data["status"], status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertIn("message", data)
+
+    def test_media_type_error_handler(self):
+        """It should return 415_UNSUPPORTED_MEDIA_TYPE for invalid content type with proper error message"""
+        account = AccountFactory()
+        response = self.client.post(
+            BASE_URL,
+            json=account.serialize(),
+            content_type="test/html"  # Invalid media type
+        )
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        data = response.get_json()
+        self.assertEqual(data["error"], "Unsupported media type")
+        self.assertEqual(data["status"], status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertIn("message", data)
