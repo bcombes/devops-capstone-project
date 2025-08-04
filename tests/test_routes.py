@@ -150,7 +150,6 @@ class TestAccountService(TestCase):
         self.assertEqual(data["phone_number"], account.phone_number)
         self.assertEqual(data["date_joined"], str(account.date_joined))
 
-
     def test_update_an_account(self):
         """It should Update an Account"""
         # Create an account first
