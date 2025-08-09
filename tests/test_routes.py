@@ -125,7 +125,9 @@ class TestAccountService(TestCase):
             json=account.serialize(),
             content_type="test/html"
         )
-        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     # ADD YOUR TEST CASES HERE ...
     def test_read_an_account(self):
@@ -187,7 +189,9 @@ class TestAccountService(TestCase):
         self.assertEqual(updated_account["email"], "updated@example.com")
         self.assertEqual(updated_account["address"], account.address)
         self.assertEqual(updated_account["phone_number"], account.phone_number)
-        self.assertEqual(updated_account["date_joined"], str(account.date_joined))
+        self.assertEqual(
+            updated_account["date_joined"], str(
+                account.date_joined))
 
     def test_delete_an_account(self):
         """It should Delete an Account"""
@@ -204,7 +208,9 @@ class TestAccountService(TestCase):
 
         # Delete the account
         delete_response = self.client.delete(f"{BASE_URL}/{account_id}")
-        self.assertEqual(delete_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(
+            delete_response.status_code,
+            status.HTTP_204_NO_CONTENT)
 
         # Verify that the deleted account cannot be found
         read_response = self.client.get(f"{BASE_URL}/{account_id}")
@@ -221,14 +227,17 @@ class TestAccountService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
 
-        # Verify that the number of accounts returned matches the created accounts
+        # Verify that the number of accounts returned matches the created
+        # accounts
         self.assertEqual(len(data), expected_count)
 
     def test_method_not_supported(self):
         """It should return 405_METHOD_NOT_ALLOWED for unsupported HTTP methods"""
         # Use an unsupported HTTP method (PATCH) on the /accounts endpoint
         response = self.client.patch(BASE_URL)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED)
         data = response.get_json()
         self.assertEqual(data["error"], "Method not Allowed")
         self.assertEqual(data["status"], status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -242,10 +251,14 @@ class TestAccountService(TestCase):
             json=account.serialize(),
             content_type="test/html"  # Invalid media type
         )
-        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
         data = response.get_json()
         self.assertEqual(data["error"], "Unsupported media type")
-        self.assertEqual(data["status"], status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(
+            data["status"],
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
         self.assertIn("message", data)
 
     def test_security_headers(self):
@@ -256,8 +269,7 @@ class TestAccountService(TestCase):
             'X-Frame-Options': 'SAMEORIGIN',
             'X-Content-Type-Options': 'nosniff',
             'Content-Security-Policy': 'default-src \'self\'; object-src \'none\'',
-            'Referrer-Policy': 'strict-origin-when-cross-origin'
-        }
+            'Referrer-Policy': 'strict-origin-when-cross-origin'}
         for key, value in headers.items():
             self.assertEqual(response.headers.get(key), value)
 
@@ -266,4 +278,5 @@ class TestAccountService(TestCase):
         response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Check for the CORS header
-        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')            
+        self.assertEqual(response.headers.get(
+            'Access-Control-Allow-Origin'), '*')
